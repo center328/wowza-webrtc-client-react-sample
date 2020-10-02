@@ -28,7 +28,7 @@ interface Props {
   showErrorOverlay: boolean
   enhanceMode: 'auto'|boolean
   videoCodec: 'H264'|'VPX'
-  streamName?: string
+  streamName: string
   onVideoStateChanged?: WebRTCVideoStateChanged
 }
 
@@ -140,12 +140,16 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
     }
   }
 
+  async componentWillUnmount() {
+    this.disconnect()
+  }
+
   async componentDidMount() {
     // localVideo is now ready (as it is mounted)
     if (this.state.isCameraReady && this.props.autoPreview && this.videoElement) {
       await this.handler.attachUserMedia(this.videoElement)
 
-      this.publish('WebRTC').catch(error => {
+      this.publish(this.props.streamName).catch(error => {
         console.error('Failed to re-connect stream', error)
       })
     }
@@ -194,7 +198,10 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
   }
 
   render() {
-    return <div className={`webrtc-publisher ${this.props.className} ${this.state.isPreviewing ? 'previewing': '' } ${this.state.isCameraReady ? '' : 'disabled'}`}>
+    return <div
+        className={`webrtc-publisher ${this.props.className} ${this.state.isPreviewing ? 'previewing': '' } ${this.state.isCameraReady ? '' : 'disabled'}`}
+        style={{backgroundColor: this.state.publisherError ? 'red' : 'none'}}
+    >
       <video
         id={this.props.id}
         ref={this._localVideoRef}

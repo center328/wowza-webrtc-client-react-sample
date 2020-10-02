@@ -11,7 +11,7 @@ interface Props extends IPlayerProps {
   autoPlay: boolean
   rotate: 'none'|'ccw'|'cw'|'flip'
   sizing: 'cover'|'contain'
-  config: WebRTCConfiguration
+  config: object
   showUnmuteButton: boolean
   showErrorOverlay: boolean
   className: string
@@ -167,54 +167,64 @@ export class WebRTCPlayer extends React.Component<Props, State> implements IPlay
     window.addEventListener('resize', this.resizeHandler)
   }
 
-  componentWillUnmount() {
+  async componentWillUnmount() {
     // unregister a resize handler.
+    await this.stop()
     window.removeEventListener('resize', this.resizeHandler)
+
   }
 
   private _initPlayer(autoPlay: boolean) {
+    if (autoPlay) {
+      setTimeout(this.play.bind(this), 10000)
+    }
+  }
+
+  async play() {
     if (!this.videoElement) {
       return
     }
     // Create a new instance
-    this.playerInterface = new Player(this.props.config, this.videoElement, ({ isMuted, isPlaying, error }) => {
+    this.playerInterface = new Player(
+        this.props.config as WebRTCConfiguration,
+        this.videoElement, ({ isMuted, isPlaying, error }) => {
       this.setState({ isMuted, isPlaying, error })
       this.props.onPlayerStateChanged && this.props.onPlayerStateChanged({ isMuted, isPlaying, error })
       this.resizeHandler && this.resizeHandler()
     })
-    if (autoPlay) {
-      setTimeout(this.play.bind(this), 3000)
-    }
-  }
-
-  public play() {
     const streamName = this.props.streamName
     console.log(streamName)
     if (!streamName) {
       throw new Error('Stream Name is required.')
     }
-    this.playerInterface && this.playerInterface.connect(streamName)
+    this.playerInterface && await this.playerInterface.connect(streamName)
   }
 
-  public stop() {
-    this.playerInterface && this.playerInterface.stop()
+  async stop() {
+    this.playerInterface && await this.playerInterface.stop()
   }
 
   render() {
-    return <div id={ this.props.id }
-        ref={this._refFrame}
-        style={{ ...this.props.style }}
-        className={`webrtc-player ${this.props.sizing} ${this.props.className}`}>
-      <video
-        ref={this._refVideo}
-        playsInline autoPlay
-        className={this.props.rotate}
-        style={this.state.videoStyle}
+    return <div
+        style={{backgroundColor: this.state.isPlaying ? '' : 'red' }}
+    >
+      <div id={ this.props.id }
+           ref={this._refFrame}
+           style={{ ...this.props.style}}
+           className={`webrtc-player ${this.props.sizing} ${this.props.className}`}>
+
+        <video
+            ref={this._refVideo}
+            playsInline autoPlay
+            className={this.props.rotate}
+            style={this.state.videoStyle}
         />
+      </div>
+
       {
         this.playerInterface && this.state.isMuted &&
         <div className="unmute-blocker d-flex justify-content-center align-items-center"
-            onClick={() => this.playerInterface && (this.playerInterface.isMuted = false) }>
+             onClick={() => this.playerInterface && (this.playerInterface.isMuted = false) }>
           { this.props.children }
           {
             this.props.showUnmuteButton &&
@@ -223,9 +233,20 @@ export class WebRTCPlayer extends React.Component<Props, State> implements IPlay
         </div>
       }
       {
+        this.playerInterface && !this.state.isMuted &&
+        <div className="unmute-blocker d-flex justify-content-center align-items-center"
+             onClick={() => this.playerInterface && (this.playerInterface.isMuted = true) }>
+          { this.props.children }
+          {
+            this.props.showUnmuteButton &&
+            <button className="btn btn-danger"><i className="fas fa-volume-mute"></i> TAP TO MUTE</button>
+          }
+        </div>
+      }
+      {
         this.state.error &&
         <div className="unmute-blocker d-flex justify-content-center align-items-center"
-            onClick={this.play.bind(this)}>
+             onClick={this.play.bind(this)}>
           {
             this.props.showErrorOverlay &&
             <p className="text-danger text-center">
