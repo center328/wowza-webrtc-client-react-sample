@@ -3,9 +3,19 @@ import { WebRTCConfiguration, WebRTCPublisher as PublisherHandler } from 'wowza-
 import { IPublisher, WebRTCVideoStateChanged, CameraSource } from './IPublisher'
 
 const cameraSourceToConstraints = (src: CameraSource): MediaStreamConstraints => {
+  // return {
+  //   audio: true,
+  //   video: src === 'any' ? true : { facingMode: { exact: src }}
+  // }
   return {
     audio: true,
-    video: src === 'any' ? true : { facingMode: { exact: src }}
+    video: {
+      facingMode: {
+        ideal: src
+      },
+      width: {min: 160, ideal: 320, max: 480},
+      height: {min: 90, ideal: 180, max: 270}
+    }
   }
 }
 
@@ -96,7 +106,9 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
       video: {
         facingMode: {
           ideal: cameraSource
-        }
+        },
+        width: { exact: 160, ideal: 320 },
+        height: { exact: 90, ideal: 180 },
       }
     })
     this.statusInvalidated()

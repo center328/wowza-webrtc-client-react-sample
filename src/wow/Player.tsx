@@ -12,7 +12,7 @@ function Play() {
       <Player
           id="player-test"
           // ref="player"
-          streamName="SfNrVtDADdZkKrDNtogT"
+          streamName="mahdaia"
           style={{ width: '100%', height: '70vh'}}
           rotate="none"   // 'cw'|'none'|'ccw'
           config={ config }

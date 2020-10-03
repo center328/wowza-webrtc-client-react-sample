@@ -14,7 +14,7 @@ function Publish() {
   return (
       <Publisher id="publisher-test"
                  className="d-block"
-                 streamName="mahdia"
+                 streamName="mahdaia"
                  style={{ width: '60vh', height: '60vh'}}
                  config={ config }
                  onVideoStateChanged={(state) => {
