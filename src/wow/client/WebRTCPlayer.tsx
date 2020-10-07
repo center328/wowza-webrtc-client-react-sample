@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { WebRTCPlayer as Player, WebRTCConfiguration } from 'wowza-webrtc-client'
+import { WebRTCPlayer as Player, WebRTCConfiguration } from '../lib/lib'
 import { IPlayerProps, IPlayer } from './IPlayer'
 
 interface Props extends IPlayerProps {

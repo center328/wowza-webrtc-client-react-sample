@@ -2,13 +2,10 @@ import * as React from 'react'
 import { WebRTCConfiguration, WebRTCPublisher as PublisherHandler } from '../lib/lib'
 import {IPublisher, WebRTCVideoStateChanged, CameraSource} from './IPublisher'
 
-const cameraSourceToConstraints = (src: CameraSource): MediaStreamConstraints => {
+const cameraSourceToConstraints = (): MediaStreamConstraints => {
   return {
-    audio: true,
+    audio: false,
     video: {
-      facingMode: {
-        ideal: src
-      },
       width: {min: 160, ideal: 320, max: 480},
     }
   }
@@ -46,7 +43,7 @@ interface State {
   muteAudio: boolean
 }
 
-export class WebRTCPublisher extends React.Component<Props, State> implements IPublisher {
+export class WebRTCDisplayer extends React.Component<Props, State> implements IPublisher {
 
   public static defaultProps: Partial<Props> = {
     trace: true,
@@ -80,13 +77,6 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
     }
   }
 
-  componentDidMount() {
-    // localVideo is now ready (as it is mounted)
-    if (this.state.isCameraReady && this.props.autoPreview && this.videoElement) {
-      this.handler.attachUserMedia(this.videoElement)
-    }
-  }
-
   constructor(props: Props) {
     // Properties
     // - Assign default values to props.
@@ -105,16 +95,6 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
 
     // so `statusInvalidated` can be called without bindings.
     this.statusInvalidated = this.statusInvalidated.bind(this)
-
-    // Create WebProducer object.
-    this.handler = new PublisherHandler(
-      this.props.config,
-      cameraSourceToConstraints(props.usingCamera),
-      this.props.enhanceMode,
-      this.props.videoCodec,
-      'camera',
-      this.statusInvalidated
-    )
   }
 
   render() {
@@ -123,13 +103,13 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
         style={{backgroundColor: this.state.publisherError ? 'red' : 'none'}}
     >
       <video
-        id={this.props.id}
-        ref={this._localVideoRef}
-        playsInline={true}
-        muted={true}
-        controls={false}
-        autoPlay={true}
-        style={{height: '100%', width: '100%', ...this.props.style}} />
+          id={this.props.id}
+          ref={this._localVideoRef}
+          playsInline={true}
+          muted={true}
+          controls={false}
+          autoPlay={true}
+          style={{height: '100%', width: '100%', ...this.props.style}} />
       {
         this.state.publisherError &&
         <div className="unmute-blocker d-flex justify-content-center align-items-center"
@@ -144,6 +124,21 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
         </div>
       }
     </div>
+  }
+
+  public getPermissions() {
+    // Create WebProducer object.
+    this.handler = new PublisherHandler(
+        this.props.config,
+        cameraSourceToConstraints(),
+        this.props.enhanceMode,
+        this.props.videoCodec,
+        'screen',
+        this.statusInvalidated
+    )
+
+    // localVideo is now ready (as it is mounted)
+    this.startPreview()
   }
 
   /**
@@ -171,6 +166,7 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
 
   public async publish(streamName: string): Promise<void> {
     await this.handler.connect(streamName)
+
   }
 
   public async disconnect() {
@@ -180,16 +176,8 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
     // }
   }
 
-  public async switchStream(cameraSource: CameraSource) {
-    await this.handler.switchStream({
-      audio: true,
-      video: {
-        facingMode: {
-          ideal: cameraSource
-        },
-        width: {min: 160, ideal: 320, max: 480},
-      }
-    }, true)
+  public async switchStream() {
+    await this.handler.switchStream(cameraSourceToConstraints(), true)
     this.statusInvalidated()
   }
 

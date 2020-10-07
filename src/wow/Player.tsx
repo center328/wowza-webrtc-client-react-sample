@@ -1,5 +1,4 @@
 import React from 'react';
-import { WebRTCConfiguration } from 'wowza-webrtc-client'
 import { WebRTCPlayer as Player } from './client'
 
 const config =  {

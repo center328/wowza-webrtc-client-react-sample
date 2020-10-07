@@ -3,8 +3,9 @@ export {
     supportGetUserMedia,
     isMobileBrowser,
     queryForCamera
-} from 'wowza-webrtc-client';
+} from '../lib/lib';
 export * from './IPlayer';
+export * from './WebRTCDisplayer';
 export * from './WebRTCPlayer';
 export * from './IPublisher';
 export * from './WebRTCPublisher';

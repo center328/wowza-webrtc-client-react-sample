@@ -1,4 +1,4 @@
-export type CameraSource = 'user'|'environment'|'any'
+export type CameraSource = 'user'|'environment'|'any'|'screen'
 
 export interface IPublisherStatus {
   isHolding: boolean
@@ -19,6 +19,10 @@ export type WebRTCVideoStateChanged = (status: WebRTCPublisherStatus) => void
 export interface IPublisher {
 
   hold(value: boolean): void
+
+  muteVideo(value: boolean): void
+
+  muteAudio(value: boolean): void
 
   publish(streamName: string): Promise<void>
 

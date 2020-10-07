@@ -7,7 +7,7 @@
 **Prepare Configuration**
 
 ```ts
-import { WebRTCConfiguration } from 'wowza-webrtc-client'
+import { WebRTCConfiguration } from './lib'
 
 const config: WebRTCConfiguration =  {
   WEBRTC_SDP_URL: 'wss://my-domain.streamlock.net/webrtc-session.json',
