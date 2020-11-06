@@ -1,5 +1,4 @@
 import { WebRTCConfiguration } from '../interface'
-import { SDPMessageProcessor } from '../publisher/SDPMessageProcessor'
 import { forEach } from 'lodash'
 import {createWebSocket, cnsl, supportGetDisplayMedia} from '../utils'
 import { Logger } from '../logger';

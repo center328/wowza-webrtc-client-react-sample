@@ -72,7 +72,6 @@ export class WebRTCPlayer extends React.Component<Props, State> implements IPlay
   componentDidMount() {
     this._initPlayer(this.props.autoPlay)
 
-    // register a resize handler.
     this.resizeHandler = () => {
       // const videoElement = this.videoElement
       // const frameElement = this.frameElement
@@ -187,9 +186,9 @@ export class WebRTCPlayer extends React.Component<Props, State> implements IPlay
     // Create a new instance
     this.playerInterface = new Player(
         this.props.config as WebRTCConfiguration,
-        this.videoElement, ({ isMuted, isPlaying, error }) => {
-      this.setState({ isMuted, isPlaying, error })
-      this.props.onPlayerStateChanged && this.props.onPlayerStateChanged({ isMuted, isPlaying, error })
+        this.videoElement, ({ isMuted, isPlaying }) => {
+      this.setState({ isMuted, isPlaying })
+      this.props.onPlayerStateChanged && this.props.onPlayerStateChanged({ isMuted, isPlaying })
       this.resizeHandler && this.resizeHandler()
     })
     const streamName = this.props.streamName
@@ -201,7 +200,7 @@ export class WebRTCPlayer extends React.Component<Props, State> implements IPlay
   }
 
   async stop() {
-    this.playerInterface && await this.playerInterface.stop()
+    this.playerInterface && await this.playerInterface.disconnect()
   }
 
   render() {

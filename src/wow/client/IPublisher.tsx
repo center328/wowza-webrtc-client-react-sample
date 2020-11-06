@@ -2,7 +2,6 @@ export type CameraSource = 'user'|'environment'|'any'|'screen'
 
 export interface IPublisherStatus {
   isHolding: boolean
-  isCameraReady: boolean
   isPublishing: boolean
   isPreviewEnabled: boolean
   publisherError: Error|undefined
@@ -20,9 +19,9 @@ export interface IPublisher {
 
   hold(value: boolean): void
 
-  muteVideo(value: boolean): void
+  // muteVideo(value: boolean): void
 
-  muteAudio(value: boolean): void
+  // muteAudio(value: boolean): void
 
   publish(streamName: string): Promise<void>
 

@@ -11,7 +11,7 @@ function Play() {
       <Player
           id="player-test"
           // ref="player"
-          streamName="mahdaia"
+          streamName="one2many1"
           style={{ width: '100%', height: '70vh'}}
           rotate="none"   // 'cw'|'none'|'ccw'
           config={ config }

@@ -8,6 +8,7 @@
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
     "@types/jest": "^24.0.0",
+    "@types/kurento-utils": "^6.7.1",
     "@types/lodash": "^4.14.161",
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.0",
@@ -19,10 +20,12 @@
     "react-player": "^2.6.2",
     "react-scripts": "3.4.3",
     "typescript": "3.8.3",
-    "webrtc-adapter": "^7.7.0"
+    "webrtc-adapter": "^7.7.0",
+    "ws": "^7.3.1"
   },
   "scripts": {
     "startssl": "HTTPS=true npm start",
+    "start-ssl": "set HTTPS=true&&npm start",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

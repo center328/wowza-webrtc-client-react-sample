@@ -39,7 +39,6 @@ interface Props {
 
 interface State {
   streamName?: string               // Publishing stream name
-  isCameraReady: boolean
   isPreviewing: boolean
   publisherError: Error|undefined
   muteVideo: boolean
@@ -57,7 +56,7 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
     enhanceMode: 'auto'
   }
 
-  private _localVideoRef = React.createRef<HTMLVideoElement>()
+  private _refVideo = React.createRef<HTMLVideoElement>()
 
   private handler!: PublisherHandler
 
@@ -66,25 +65,23 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
   }
 
   private get videoElement(): HTMLVideoElement|undefined {
-    return this._localVideoRef.current || undefined
+    return this._refVideo.current || undefined
   }
 
   componentWillUnmount() {
     this.disconnect()
   }
 
-  componentDidUpdate(prevProps: Props) {
-    // Keep enhance mode up-to-date.
-    if (this.props.enhanceMode !== prevProps.enhanceMode) {
-      this.handler.enhanceMode = this.props.enhanceMode
-    }
-  }
-
   componentDidMount() {
-    // localVideo is now ready (as it is mounted)
-    if (this.state.isCameraReady && this.props.autoPreview && this.videoElement) {
-      this.handler.attachUserMedia(this.videoElement)
-    }
+
+    // Create WebProducer object.
+    this.handler = new PublisherHandler(
+        this.props.config,
+        this.videoElement,
+        cameraSourceToConstraints(this.props.usingCamera),
+        'camera',
+        this.statusInvalidated
+    )
   }
 
   constructor(props: Props) {
@@ -95,7 +92,6 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
     // States declaration
     // - No states is required at this point.
     this.state = {
-      isCameraReady: true,
       isPreviewing: true,
       publisherError: undefined,
       streamName: undefined,
@@ -105,26 +101,16 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
 
     // so `statusInvalidated` can be called without bindings.
     this.statusInvalidated = this.statusInvalidated.bind(this)
-
-    // Create WebProducer object.
-    this.handler = new PublisherHandler(
-      this.props.config,
-      cameraSourceToConstraints(props.usingCamera),
-      this.props.enhanceMode,
-      this.props.videoCodec,
-      'camera',
-      this.statusInvalidated
-    )
   }
 
   render() {
     return <div
-        className={`webrtc-publisher ${this.props.className} ${this.state.isPreviewing ? 'previewing': '' } ${this.state.isCameraReady ? '' : 'disabled'}`}
+        className={`webrtc-publisher ${this.props.className} ${this.state.isPreviewing ? 'previewing': '' }`}
         style={{backgroundColor: this.state.publisherError ? 'red' : 'none'}}
     >
       <video
         id={this.props.id}
-        ref={this._localVideoRef}
+        ref={this._refVideo}
         playsInline={true}
         muted={true}
         controls={false}
@@ -159,16 +145,6 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
     })
   }
 
-  public async stopPreview() {
-    await this.handler.detachUserMedia()
-  }
-
-  public async startPreview() {
-    if (this.videoElement) {
-      await this.handler.attachUserMedia(this.videoElement)
-    }
-  }
-
   public async publish(streamName: string): Promise<void> {
     await this.handler.connect(streamName)
   }
@@ -180,64 +156,12 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
     // }
   }
 
-  public async switchStream(cameraSource: CameraSource) {
-    await this.handler.switchStream({
-      audio: true,
-      video: {
-        facingMode: {
-          ideal: cameraSource
-        },
-        width: {min: 160, ideal: 320, max: 480},
-      }
-    }, true)
-    this.statusInvalidated()
-  }
-
   public hold(hold: boolean) {
     this.handler.isHolding = hold
   }
 
-  public async muteVideo(hold: boolean) {
-    if (this.state.muteVideo !== hold) {
-      this.setState({muteVideo: hold})
-      if (hold)
-        await this.handler.switchStream({
-          audio: !this.state.muteAudio,
-          video: false
-        }, true)
-      else
-        await this.handler.switchStream({
-          audio: !this.state.muteAudio,
-          video: {
-            width: {min: 160, ideal: 320, max: 480},
-          }
-        }, true)
-      this.statusInvalidated()
-    }
-  }
-
-  public async muteAudio(hold: boolean) {
-    if (this.state.muteAudio !== hold) {
-      this.setState({muteAudio: hold})
-      if (this.state.muteVideo)
-        await this.handler.switchStream({
-          audio: !hold,
-          video: false
-        }, true)
-      else
-        await this.handler.switchStream({
-          audio: !hold,
-          video: {
-            width: {min: 160, ideal: 320, max: 480},
-          }
-        }, true)
-      this.statusInvalidated()
-    }
-  }
-
   private statusInvalidated() {
     console.log({
-      isCameraReady: !this.handler.isCameraMuted,
       isHolding: this.handler.isHolding,
       isPublishing: this.handler.isPublishing,
       isPreviewEnabled: this.isPreviewEnabled,
@@ -245,13 +169,11 @@ export class WebRTCPublisher extends React.Component<Props, State> implements IP
     })
     // Update local states
     this.setState({
-      isCameraReady: !this.handler.isCameraMuted,
       isPreviewing: this.handler.isPreviewEnabled,
       publisherError: this.handler.lastError
     })
     // dispatch update to exterior state handler
     this.props.onVideoStateChanged && this.props.onVideoStateChanged({
-      isCameraReady: !this.handler.isCameraMuted,
       isHolding: this.handler.isHolding,
       isPublishing: this.handler.isPublishing,
       isPreviewEnabled: this.isPreviewEnabled,
