@@ -2,6 +2,8 @@ import { WebRTCConfiguration } from '../interface'
 import { get } from 'lodash'
 import CancellablePromise, { isMobileBrowser, cancellable, cnsl } from '../utils'
 
+window.cnsl_debug = true
+
 export interface WebRTCPlayerStatus {
   isMuted?: boolean
   isPlaying: boolean
@@ -11,7 +13,7 @@ export interface WebRTCPlayerStatus {
 export class WebRTCPlayer {
 
   private userData = {param1:"value1"}
-  
+
   private peerConnection?: RTCPeerConnection = undefined
 
   private lastError?: Error
@@ -20,7 +22,7 @@ export class WebRTCPlayer {
 
   // Only settable by owner.
   private currentStreamName?: string = undefined
-  
+
   private static _currentStreams: { [key:string]: MediaStream } = {}
 
   public static currentStream(streamName: string): MediaStream|undefined {
@@ -70,7 +72,7 @@ export class WebRTCPlayer {
 
   /**
    * Connect to WebRTC source, acquire media, and attach to target videoElement.
-   * 
+   *
    * @param streamName
    */
   async connect(streamName: string) {
@@ -105,7 +107,7 @@ export class WebRTCPlayer {
       const conf: WebRTCConfiguration = this.config
       const streamInfo = {
         applicationName: conf.WEBRTC_APPLICATION_NAME,
-        streamName, 
+        streamName,
         sessionId: "[empty]"    // random me!
       }
       const wsConnection = new WebSocket(conf.WEBRTC_SDP_URL)
@@ -156,10 +158,10 @@ export class WebRTCPlayer {
           reject(err)
           return
         }
-      
+
         const peerConnection = this.peerConnection
         const msgJSON = JSON.parse(evt.data)
-        
+
         const msgStatus = +msgJSON.status
         const msgCommand = msgJSON.command
         let repeaterRetryCount = 0
@@ -176,7 +178,7 @@ export class WebRTCPlayer {
           reject(new Error(msgJSON.statusDescription))
         } else {
           streamInfo.sessionId = get(msgJSON, 'streamInfo.sessionId', undefined)
-    
+
           const sdpData = get(msgJSON, 'sdp', undefined)
           if (sdpData) {
             cnsl.log(`[Player] sdp: ${JSON.stringify(sdpData)}`)
@@ -191,7 +193,7 @@ export class WebRTCPlayer {
               wsConnection.send('{"direction":"play", "command":"sendResponse", "streamInfo":'+JSON.stringify(streamInfo)+', "sdp":'+JSON.stringify(sessionDescInit)+', "userData":'+JSON.stringify(this.userData)+'}');
             })
           }
-    
+
           const iceCandidates = msgJSON.iceCandidates
           if (iceCandidates !== undefined) {
             for(const index in iceCandidates) {
@@ -200,7 +202,7 @@ export class WebRTCPlayer {
             }
           }
         }
-        
+
         // Finalize wsConnection required
         if ('sendResponse'.localeCompare(msgCommand) === 0) {
           wsConnection.close()
@@ -211,7 +213,7 @@ export class WebRTCPlayer {
       }
 
       wsConnection.onclose = () => cnsl.log('[Player] wsConnection.onclose')
-      
+
       wsConnection.onerror = (evt) => {
         cnsl.log('[Player] wsConnection.onerror: ' + JSON.stringify(evt))
         reject(new Error(JSON.stringify(evt)))
@@ -247,7 +249,7 @@ export class WebRTCPlayer {
     if (this.currentStreamName) {
       delete WebRTCPlayer._currentStreams[this.currentStreamName]
     }
-  
+
     // release resources
     this.peerConnection && this.peerConnection.close()
     this.peerConnection = undefined
@@ -264,9 +266,9 @@ export class WebRTCPlayer {
   }
 
   private _reportStatus() {
-    this.onStateChanged({ 
-      isMuted: this.isMuted, 
-      isPlaying: this.isPlaying, 
+    this.onStateChanged({
+      isMuted: this.isMuted,
+      isPlaying: this.isPlaying,
       error: this.lastError
     })
   }

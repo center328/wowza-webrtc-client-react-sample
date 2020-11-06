@@ -3,15 +3,19 @@ import './App.css';
 import Play from './wow/Player';
 import {Publish}  from './wow/Publisher';
 import {Display} from './wow/Display';
+import {ResponsivePlayer} from './wow/PlayerJs';
 
 function App() {
+
   return (
       <>
         {/*<Publish />*/}
-        <Display />
-        <div>salam</div>
+        {/*<Display />*/}
+        <ResponsivePlayer />
+        {/*<div>salam</div>*/}
         {/*<Play />*/}
         {/*<div>salam</div>*/}
+
       </>
   );
 }
